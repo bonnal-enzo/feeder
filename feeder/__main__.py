@@ -1,18 +1,20 @@
 import time
 import sys
 import logging
-from pynput.mouse import Button, Controller
+import random
+from pynput.mouse import Button, Controller, Listener
 
 class ClicPoint:
 
-    mouse = Controller()
     actions_delay_seconds = 1
+    mouse = Controller()
 
     def __init__(self, coords):
         self.coords = coords
     
     def delay(self):
-        time.sleep(self.actions_delay_seconds)
+        # sleep minimum actions_delay_seconds and up to 150% of actions_delay_seconds
+        time.sleep(self.actions_delay_seconds * (1 + random.random() / 2))
 
     def point_at(self):
         self.mouse.position = self.coords.tuple
@@ -64,14 +66,15 @@ class ClicPointFactory:
     ref_inv_slot_width = 1097.438720703125 - 1055.46826171875
     ref_inv_slot_height = 340.6443786621094 - 299.8241271972656
 
-    def __init__(self, equip_tab_x_coord, resou_tab_x_coord):
-        if equip_tab_x_coord is None or resou_tab_x_coord is None:
+    def __init__(self, equip_tab_coords: Coords, equip_to_resources_vector_coords: Coords):
+        if equip_tab_coords is None or equip_to_resources_vector_coords is None:
             self.coef = 1  # TODO remove, dev only
             self.origin = self.ref_origin
         else:
-            self.coef = (resou_tab_x_coord - equip_tab_x_coord) / self.ref_tabs_x_diff
-            self.origin = equip_tab_x_coord.minus(self.ref_equip_tab_relative_coords.times(self.coef))
-    
+            self.coef = equip_to_resources_vector_coords.x / self.ref_tabs_x_diff
+            self.origin = equip_tab_coords.minus(self.ref_equip_tab_relative_coords.times(self.coef))
+        print("using coef=", self.coef)
+
     def _true_coords_from_ref(self, coords):
         return coords.times(self.coef).plus(self.origin)
 
@@ -120,16 +123,47 @@ class FeedStrategy:
             self.res_tab.clic()
             self.food_inv_slot.drag_and_drop(self.fami_slot)
 
-class Main:
-    def run(feed_strategy: FeedStrategy):
-        ClicPoint.actions_delay_seconds = 0.5
-        time.sleep(2)
-        feed_strat.feed()
+class DragAndDropsRecorder:
+    def __init__(self):
+        self.clicks = []
+        on_click = lambda x, y, button, pressed: self.clicks.append((x, y))
+        self.listener: Listener = Listener(on_click=on_click)
+
+    def start(self):
+        self.listener.start()
+    
+    def stop(self):
+        self.listener.stop()
+        time.sleep(0.1)
+
+    def last_origin(self):
+        """
+        Origin of the last drag and drop event
+        """
+        return Coords(*self.clicks[-2])
+
+    def last_vector(self):
+        """
+        Vector of the last drag and drop event
+        """
+        return Coords(
+            self.clicks[-1][0] - self.clicks[-2][0],
+            self.clicks[-1][1] - self.clicks[-2][1]
+        )
 
 
 if __name__ == "__main__":
-    clic_point_factory = ClicPointFactory(None, None)
     n_famis = int(sys.argv[1])
+    ClicPoint.actions_delay_seconds = 0.5
+    dd_recorder = DragAndDropsRecorder()
+    dd_recorder.start()
+    time.sleep(5)
+    dd_recorder.stop()
+    print(dd_recorder.last_vector())
+    clic_point_factory = ClicPointFactory(
+        dd_recorder.last_origin(),
+        dd_recorder.last_vector()
+    )
     feed_strat = FeedStrategy(clic_point_factory, n_famis)
     logging.info("Entering run with n_famis=", n_famis)
-    Main.run(feed_strat)
+    feed_strat.feed()

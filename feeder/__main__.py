@@ -16,12 +16,15 @@ class ClicPoint:
         # sleep minimum actions_delay_seconds and up to 150% of actions_delay_seconds
         time.sleep(self.actions_delay_seconds * (1 + random.random() / 2))
 
-    def point_at(self):
+    def point_at(self, exit_if_moved=True):
         self.mouse.position = self.coords.tuple
         self.delay()
+        if exit_if_moved and abs(self.mouse.position[0] - self.coords.tuple[0]) > 5:
+           sys.exit(0)
 
     def clic(self):
        self.point_at()
+       
        self.mouse.click(Button.left, 1)
        self.delay()
        
@@ -154,10 +157,10 @@ class DragAndDropsRecorder:
 
 if __name__ == "__main__":
     n_famis = int(sys.argv[1])
-    ClicPoint.actions_delay_seconds = 0.5
+    ClicPoint.actions_delay_seconds = 0.3
     dd_recorder = DragAndDropsRecorder()
     dd_recorder.start()
-    time.sleep(5)
+    time.sleep(6)
     dd_recorder.stop()
     print(dd_recorder.last_vector())
     clic_point_factory = ClicPointFactory(

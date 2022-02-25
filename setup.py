@@ -8,4 +8,5 @@ setup(
     author='Enzo Bonnal',
     author_email='enzobonnal@gmail.com',
     description='Tool that takes care of pets',
+    install_requires=["pynput==1.7.6"]
 )

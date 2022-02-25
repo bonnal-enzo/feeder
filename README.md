@@ -1,6 +1,8 @@
 # feeder
 Tool that takes care of pets
 
+`python3 -m pip install .`
+
 # usage
 1. select "pets" type in equipments
 2. put your food a first slot in resources

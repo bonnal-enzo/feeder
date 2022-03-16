@@ -85,17 +85,18 @@ class FeedStrategy:
 if __name__ == "__main__":
     n_famis: int = int(sys.argv[1])
     dry_run = "--dry-run" in sys.argv
+
     ClicPoint.actions_delay_seconds = 0.3
     dd_recorder = DragAndDropsRecorder()
     dd_recorder.start()
     time.sleep(6)
     dd_recorder.stop()
-    print(dd_recorder.last_vector())
+
     clic_point_factory = ClicPointFactory(
         dd_recorder.last_origin(),
         dd_recorder.last_vector()
     )
     feed_strat = FeedStrategy(clic_point_factory, n_famis, dry_run)
     logging.getLogger().setLevel("INFO")
-    logging.info(f"Entering run with n_famis={n_famis}, dry_run= {dry_run}")
+    logging.info(f"Entering feed with n_famis={n_famis}, dry_run= {dry_run}, last vector={dd_recorder.last_vector().tuple}")
     feed_strat.feed()

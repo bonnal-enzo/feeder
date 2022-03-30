@@ -83,6 +83,9 @@ class FeedStrategy:
 
 
 if __name__ == "__main__":
+    logging.getLogger().setLevel("INFO")
+    logging.info("Script starts")
+    
     n_famis: int = int(sys.argv[1])
     dry_run = "--dry-run" in sys.argv
 
@@ -97,6 +100,6 @@ if __name__ == "__main__":
         dd_recorder.last_vector()
     )
     feed_strat = FeedStrategy(clic_point_factory, n_famis, dry_run)
-    logging.getLogger().setLevel("INFO")
+    
     logging.info(f"Entering feed with n_famis={n_famis}, dry_run= {dry_run}, last vector={dd_recorder.last_vector().tuple}")
     feed_strat.feed()
